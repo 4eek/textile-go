@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/golang/protobuf/proto"
 	"github.com/op/go-logging"
 	"github.com/textileio/textile-go/central/models"
 	tcore "github.com/textileio/textile-go/core"
@@ -221,25 +222,25 @@ func (m *Mobile) Threads() (string, error) {
 }
 
 // AddThread adds a new thread with the given name
-func (m *Mobile) AddThread(name string, mnemonic string) (string, error) {
+func (m *Mobile) AddThread(name string, mnemonic string) ([]byte, error) {
 	var mnem *string
 	if mnemonic != "" {
 		mnem = &mnemonic
 	}
 	thrd, _, err := tcore.Node.Wallet.AddThreadWithMnemonic(name, mnem)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// subscribe to updates
 	go m.subscribe(thrd)
 
-	item := pb.ThreadItem{
+	item := &pb.ThreadItem{
 		Id:    thrd.Id,
 		Name:  thrd.Name,
 		Peers: int32(len(thrd.Peers("", -1))),
 	}
-	return toJSON(item)
+	return proto.Marshal(item)
 }
 
 // RemoveThread call core RemoveDevice

@@ -2,13 +2,14 @@ package mobile_test
 
 import (
 	"encoding/json"
-	"os"
-	"testing"
-
+	"github.com/golang/protobuf/proto"
 	"github.com/segmentio/ksuid"
 	. "github.com/textileio/textile-go/mobile"
+	"github.com/textileio/textile-go/pb"
 	util "github.com/textileio/textile-go/util/testing"
 	libp2pc "gx/ipfs/QmaPbCnUMBohSGo3KnxEa2bHqyJVVeEEcwtqJAYxerieBo/go-libp2p-crypto"
+	"os"
+	"testing"
 )
 
 type TestMessenger struct {
@@ -110,11 +111,16 @@ func TestMobile_GetAccessToken(t *testing.T) {
 }
 
 func TestMobile_AddThread(t *testing.T) {
-	item, err := mobile.AddThread("default", "")
+	buf, err := mobile.AddThread("default", "")
 	if err != nil {
 		t.Errorf("add thread failed: %s", err)
 	}
-	if item == "" {
+	item := &pb.ThreadItem{}
+	if err = proto.Unmarshal(buf, item); err != nil {
+		t.Error("add thread bad result")
+		return
+	}
+	if item.Name != "default" {
 		t.Error("add thread bad result")
 	}
 }
